@@ -38,6 +38,11 @@ import json
 import collections
 import logging
 
+try:
+    from time import monotonic
+except ImportError:
+    from monotonic import monotonic
+
 
 logger = logging.getLogger(__name__)
 
@@ -609,7 +614,7 @@ class Scanner(object):
 
         num_families = len(self.res["plugins"]["families"])
         logger.debug("Disabling %d families ...", num_families)
-        start_time = time.monotonic()
+        start_time = monotonic()
         # print(json.dumps(families, sort_keys=False, indent=4))
         # The delay in this call seems to be based on the number of
         # plugins enabled in the *previous* call.  Thus, we have no
@@ -617,7 +622,7 @@ class Scanner(object):
         # timeout of 60.0 seconds should be sufficient.
         self.action(action="policies/" + str(self.policy_id),
                     method="PUT", extra=families, timeout=60.0)
-        elapsed_time = time.monotonic() - start_time
+        elapsed_time = monotonic() - start_time
         logger.debug("Disabled  %d families in %.1f s",
                      num_families, elapsed_time)
 
@@ -667,10 +672,10 @@ class Scanner(object):
         # Enable the individual plugins we're interested in
         num_plugins = len(self.plugins)
         logger.debug("Enabling %d plugins", num_plugins)
-        start_time = time.monotonic()
+        start_time = monotonic()
         self.action(action="policies/" + str(self.policy_id),
                     method="PUT", extra=families, timeout=60.0)
-        elapsed_time = time.monotonic() - start_time
+        elapsed_time = monotonic() - start_time
         logger.debug("Enabled  %d plugins in %.1f s, %.2f s/plugin",
                      num_plugins, elapsed_time,
                      elapsed_time/num_plugins if num_plugins else 0)
@@ -794,12 +799,12 @@ class Scanner(object):
             logger.warning("Tiemout likely due to %d plugins.  Reduce to 20.",
                            num_plugins)
         logger.debug("Starting scan with %d plugins ...", num_plugins)
-        start_time = time.monotonic()
+        start_time = monotonic()
         # A timeout of 90 seconds seems to be OK provided that the
         # number of plugins is less than 20.
         self.action(action="scans/" + str(self.scan_id) + "/launch",
                     method="POST", timeout=90.0)
-        elapsed_time = time.monotonic() - start_time
+        elapsed_time = monotonic() - start_time
         logger.debug("Started  scan with %d plugins in %.1f s, %.2f s/plugin",
                      num_plugins, elapsed_time,
                      elapsed_time/num_plugins if num_plugins else 0)
@@ -816,7 +821,7 @@ class Scanner(object):
 
         If it is failing, wait 2 seconds and try again
         '''
-        start_time = time.monotonic()
+        start_time = monotonic()
 
         running = True
         counter = 0
@@ -840,14 +845,14 @@ class Scanner(object):
                     counter += 1
                     if counter % 30 == 0:
                         logger.debug("Checking scan status, time elapsed %.1f"
-                                     " sec", (time.monotonic() -  start_time))
+                                     " sec", (monotonic() -  start_time))
 
                 if (scan["uuid"] == self.scan_uuid
                         and scan['status'] != "running" and scan['status'] != "pending"):
                     running = False
 
         logger.debug("Complete! Run time: %.1f seconds.",
-                     (time.monotonic() -  start_time))
+                     (monotonic() -  start_time))
 
 
 ################################################################################
